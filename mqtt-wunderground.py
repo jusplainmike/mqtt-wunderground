@@ -66,11 +66,11 @@ def on_connect(self, mosq, obj, rc):
         mqttclient.subscribe(config['config_topic'] + "/#")
 
 
-def on_subscribe(self, mosq, obj, mid, granted_qos):
+def on_subscribe(mosq, obj, mid, granted_qos):
     logger.info("Subscribed with message ID " + str(mid) + " and QOS " + str(granted_qos) + " acknowledged by broker")
 
 
-def on_message(self, mosq, obj, msg):
+def on_message(mosq, obj, msg):
     logger.info("Received message: " + msg.topic + ":" + msg.payload)
     if msg.topic.startswith(config['config_topic']):
         configitem = msg.topic.split('/')[-1]
@@ -82,7 +82,7 @@ def on_message(self, mosq, obj, msg):
             logger.info("Ignoring unknown configuration item " + configitem)
 
 
-def on_publish(self, mosq, obj, mid):
+def on_publish(mosq, obj, mid):
     # logger.info("Published message with message ID: "+str(mid))
     pass
 

@@ -15,7 +15,7 @@ import urllib2
 import json
 import paho.mqtt.client as paho
 import time
-import os
+#import os
 import logging
 
 
@@ -29,8 +29,8 @@ logger.addHandler(consoleHandler)
 # Component config
 config = {}
 config['deviceid'] = "wunderground"
-config['publish_topic'] = ""
-config['config_topic'] = ""
+config['publish_topic'] = "wunderground/status"
+config['config_topic'] = "wunderground/config"
 config['updaterate'] = 900  # in seconds
 config['wu_api_key'] = ""
 config['country'] = ""
@@ -113,16 +113,6 @@ def wunderground_get_weather():
     windspeed = str(parsed_json['current_observation']['wind_kph'])
     winddirection = str(parsed_json['current_observation']['wind_degrees'])
 
-#   Publish the values we parsed from the feed to the broker
-#    mqttclient.publish(config['publish_topic'] + "/temperature", temperature, retain=True)
-#    mqttclient.publish(config['publish_topic'] + "/humidity", humidity, retain=True)
-#    mqttclient.publish(config['publish_topic'] + "/precipitation", precipitation, retain=True)
-#    mqttclient.publish(config['publish_topic'] + "/pressure", pressure, retain=True)
-#    mqttclient.publish(config['publish_topic'] + "/windspeed", windspeed, retain=True)
-#    mqttclient.publish(config['publish_topic'] + "/winddirection", winddirection, retain=True)
-
-#    logger.info("Published " + str(config['deviceid']) + " data to " + str(config['publish_topic']))
-
 #   Building message info as JSON package
     send_msg = {
         'temperature': temperature,
@@ -133,10 +123,10 @@ def wunderground_get_weather():
         'winddirection': winddirection
     }
 
-#   Publish the values we parsed from the feed to the broker in a json package
+#  Publish data json or single
     if config['json'] == 1 :
         mqttclient.publish(config['publish_topic'] + "/json", payload=json.dumps(send_msg), qos=2, retain=True)
-        logger.info("Published json data to " + str(config['publish_topic']))
+        logger.info("Published weather json data to " + str(config['publish_topic']))
     else :
         mqttclient.publish(config['publish_topic'] + "/temperature", temperature, retain=True)
         mqttclient.publish(config['publish_topic'] + "/humidity", humidity, retain=True)
@@ -174,10 +164,6 @@ def wunderground_get_suncalc():
     sunset = str(parsed_json['moon_phase']['sunset']['hour'].zfill(2) + ":" + parsed_json['moon_phase']['sunrise']['minute'].zfill(2))
 
 #   Publish the values we parsed from the feed to the broker
-#    mqttclient.publish(config['publish_topic'] + "/sunrise", sunrise, retain=True)
-#    mqttclient.publish(config['publish_topic'] + "/sunset", sunset, retain=True)
-
-#    logger.info("Published sunrise and sunsat data data to " + str(config['publish_topic']))
 
 #   Building message info as JSON package
     send_msg = {
@@ -185,10 +171,14 @@ def wunderground_get_suncalc():
         'sunset': sunset
     }
 
-#   Publish the values we parsed from the feed to the broker in a json package
-    mqttclient.publish(config['publish_topic'] + "/json", payload=json.dumps(send_msg), qos=2, retain=True)
+    if config['json'] == 1 :
+        mqttclient.publish(config['publish_topic'] + "/json", payload=json.dumps(send_msg), qos=2, retain=True)
+        logger.info("Published sunrise and sunset json data to " + str(config['publish_topic']))
+    else :
+        mqttclient.publish(config['publish_topic'] + "/sunrise", sunrise, retain=True)
+        mqttclient.publish(config['publish_topic'] + "/sunset", sunset, retain=True)
+        logger.info("Published sunrise and sunsat data data to " + str(config['publish_topic']))
 
-    logger.info("Published json data to " + str(config['publish_topic']))
 
 
 # Create the Mosquitto client

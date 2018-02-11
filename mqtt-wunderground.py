@@ -26,34 +26,14 @@ logger.addHandler(consoleHandler)
 config = {}
 config['deviceid'] = "wunderground"
 config['publish_topic'] = ""
+config['config_topic'] = ""
 config['updaterate'] = 900  # in seconds
 config['wu_api_key'] = ""
 config['country'] = ""
 config['city'] = ""
-
-
-# Get MQTT servername/address
-# Supports Docker environment variable format MQTT_PORT = tcp://#.#.#.#:1883
-mqtt_port = os.environ.get('MQTT_PORT')
-if mqtt_port is None:
-    logger.info("MQTT_PORT is not set, using default localhost:1883")
-    config['broker_address'] = "localhost"
-    config['broker_port'] = 1883
-else:
-    config['broker_address'] = mqtt_port.split("//")[1].split(":")[0]
-    config['broker_port'] = 1883
-
-# Get config topic
-config['config_topic'] = os.environ.get('CONFIG_TOPIC')
-if config['config_topic'] is None:
-    logger.info("CONFIG_TOPIC is not set, exiting")
-    raise SystemExit
-
-# Get Weather Underground API key
-config['wu_api_key'] = os.environ.get('CONFIG_WU_API_KEY')
-if config['wu_api_key'] is None:
-    logger.info("CONFIG_WU_API_KEY is not set, exiting")
-    raise SystemExit
+config['broker_address'] = "localhost"
+config['broker_port'] = 1883
+config['json'] = 0
 
 
 # Create the callbacks for Mosquitto
@@ -64,6 +44,7 @@ def on_connect(self, mosq, obj, rc):
         # Subscribe to device config
         logger.info("Subscribing to device config at " + config['config_topic'] + "/#")
         mqttclient.subscribe(config['config_topic'] + "/#")
+        mqttclient.publish(config['publish_topic'] +"/connected",2,qos=2,retain=True)
 
 
 def on_subscribe(mosq, obj, mid, granted_qos):
@@ -211,7 +192,8 @@ mqttclient.on_publish = on_publish
 # Connect to the Mosquitto broker
 logger.info("Connecting to broker " + config['broker_address'] + ":" + str(config['broker_port']))
 mqttclient.connect(config['broker_address'], config['broker_port'], 60)
-
+mqttclient.will_set(config['publish_topic'] +"/connected",0,qos=2,retain=True)
+mqttclient.publish(config['publish_topic'] +"/connected",1,qos=1,retain=True)
 # Start the Mosquitto loop in a non-blocking way (uses threading)
 mqttclient.loop_start()
 

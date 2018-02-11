@@ -4,6 +4,10 @@ mqtt-wunderground.py
 Simple MQTT publisher of weather data using the WeatherUnderground API.
 Publishes the current temperature, relative humidity, precipitation, pressure,
 windspeed and winddirection from a given Personal Weather Station
+
+Original script by Simon Vanderveldt
+https://github.com/simonvanderveldt/mqtt-wunderground
+Modified to read config from file, export json and follow the mqtt-smarthome architecture
 """
 
 # IMPORTS
@@ -44,6 +48,7 @@ def on_connect(self, mosq, obj, rc):
         # Subscribe to device config
         logger.info("Subscribing to device config at " + config['config_topic'] + "/#")
         mqttclient.subscribe(config['config_topic'] + "/#")
+        # Publish connected status
         mqttclient.publish(config['publish_topic'] +"/connected",2,qos=2,retain=True)
 
 

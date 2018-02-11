@@ -44,7 +44,6 @@ def on_connect(self, mosq, obj, rc):
         # Subscribe to device config
         logger.info("Subscribing to device config at " + config['config_topic'] + "/#")
         mqttclient.subscribe(config['config_topic'] + "/#")
-        mqttclient.will_set(config['publish_topic'] +"/connected",0,qos=2,retain=True)
         mqttclient.publish(config['publish_topic'] +"/connected",2,qos=2,retain=True)
 
 
@@ -190,8 +189,9 @@ mqttclient.on_message = on_message
 mqttclient.on_publish = on_publish
 
 
-# Connect to the Mosquitto broker
+# Set the last will, connect to broker, publish connected
 logger.info("Connecting to broker " + config['broker_address'] + ":" + str(config['broker_port']))
+mqttclient.will_set(config['publish_topic'] +"/connected",0,qos=2,retain=True)
 mqttclient.connect(config['broker_address'], config['broker_port'], 60)
 mqttclient.publish(config['publish_topic'] +"/connected",1,qos=1,retain=True)
 # Start the Mosquitto loop in a non-blocking way (uses threading)

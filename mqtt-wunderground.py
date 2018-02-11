@@ -134,10 +134,17 @@ def wunderground_get_weather():
     }
 
 #   Publish the values we parsed from the feed to the broker in a json package
-    mqttclient.publish(config['publish_topic'] + "/json", payload=json.dumps(send_msg), qos=2, retain=True)
-
-    logger.info("Published json data to " + str(config['publish_topic']))
-
+    if config['json'] == 1 :
+        mqttclient.publish(config['publish_topic'] + "/json", payload=json.dumps(send_msg), qos=2, retain=True)
+        logger.info("Published json data to " + str(config['publish_topic']))
+    else :
+        mqttclient.publish(config['publish_topic'] + "/temperature", temperature, retain=True)
+        mqttclient.publish(config['publish_topic'] + "/humidity", humidity, retain=True)
+        mqttclient.publish(config['publish_topic'] + "/precipitation", precipitation, retain=True)
+        mqttclient.publish(config['publish_topic'] + "/pressure", pressure, retain=True)
+        mqttclient.publish(config['publish_topic'] + "/windspeed", windspeed, retain=True)
+        mqttclient.publish(config['publish_topic'] + "/winddirection", winddirection, retain=True)
+        logger.info("Published " + str(config['deviceid']) + " data to " + str(config['publish_topic']))
 
     
 

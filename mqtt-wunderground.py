@@ -32,7 +32,7 @@ config['deviceid'] = "wunderground"
 config['publish_topic'] = "wunderground/status"
 config['config_topic'] = "wunderground/config"
 config['command_topic'] = "wunderground/command"
-config['updaterate'] = 900  # in seconds
+config['updaterate'] = 20  # in seconds
 config['wu_api_key'] = "86fa33a7ec60af96"
 config['country'] = "US"
 config['city'] = "77550"
@@ -64,19 +64,10 @@ def on_message(mosq, obj, msg):
         if configitem in config:
             # TODO unset when value set to ""
             logger.info("Setting configuration " + configitem + " to " + msg.payload)
-            config[configitem] = msg.payload
+	    wunderground_get_weather()
+#            config[configitem] = msg.payload
         else:
             logger.info("Ignoring unknown configuration item " + configitem)
-
-   else msg.topic.startswith(config['command_topic']):
-        command = msg.topic.split('/')[-1]
-        if command == "forecast":
-            # TODO unset when value set to ""
-            logger.info("Publishing forecast data")
-	    wunderground_get_weather()
-        else:
-            logger.info("Ignoring unknown command")
-
 
 
 def on_publish(mosq, obj, mid):

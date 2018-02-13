@@ -68,7 +68,10 @@ def on_message(mosq, obj, msg):
 #            config[configitem] = msg.payload
         else:
             logger.info("Ignoring unknown configuration item " + configitem)
-
+	
+    elif msg.topic.startwith(config['command_topic']):
+	command = msg.payload
+	logger.info("Testing Commands")
 
 def on_publish(mosq, obj, mid):
     # logger.info("Published message with message ID: "+str(mid))

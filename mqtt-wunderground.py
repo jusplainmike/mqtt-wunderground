@@ -15,7 +15,7 @@ import urllib2
 import json
 import paho.mqtt.client as paho
 import time
-#import os
+import sys
 import logging
 
 
@@ -31,13 +31,14 @@ config = {}
 config['deviceid'] = "wunderground"
 config['publish_topic'] = "wunderground/status"
 config['config_topic'] = "wunderground/config"
+config['command_topic'] = "wunderground/command"
 config['updaterate'] = 900  # in seconds
-config['wu_api_key'] = ""
-config['country'] = ""
-config['city'] = ""
+config['wu_api_key'] = "86fa33a7ec60af96"
+config['country'] = "US"
+config['city'] = "77550"
 config['broker_address'] = "localhost"
 config['broker_port'] = 1883
-config['json'] = 0
+config['json'] = 1
 
 
 # Create the callbacks for Mosquitto
@@ -67,6 +68,16 @@ def on_message(mosq, obj, msg):
         else:
             logger.info("Ignoring unknown configuration item " + configitem)
 
+   else msg.topic.startswith(config['command_topic']):
+        command = msg.topic.split('/')[-1]
+        if command == "forecast":
+            # TODO unset when value set to ""
+            logger.info("Publishing forecast data")
+	    wunderground_get_weather()
+        else:
+            logger.info("Ignoring unknown command")
+
+
 
 def on_publish(mosq, obj, mid):
     # logger.info("Published message with message ID: "+str(mid))
@@ -95,7 +106,7 @@ def wunderground_get_weather():
     parsed_json = json.load(resonse)
     resonse.close()
 
-    temperature = str(parsed_json['current_observation']['temp_c'])
+    temperature = str(parsed_json['current_observation']['temp_f'])
 
     # Strip off the last character of the relative humidity because we want an int
     # but we get a % as return from the weatherunderground API
@@ -110,7 +121,7 @@ def wunderground_get_weather():
         precipitation = str(0)
 
     pressure = str(parsed_json['current_observation']['pressure_mb'])
-    windspeed = str(parsed_json['current_observation']['wind_kph'])
+    windspeed = str(parsed_json['current_observation']['wind_mph'])
     winddirection = str(parsed_json['current_observation']['wind_degrees'])
 
 #   Building message info as JSON package
@@ -197,13 +208,18 @@ mqttclient.will_set(config['publish_topic'] +"/connected",0,qos=2,retain=True)
 mqttclient.connect(config['broker_address'], config['broker_port'], 60)
 mqttclient.publish(config['publish_topic'] +"/connected",1,qos=1,retain=True)
 # Start the Mosquitto loop in a non-blocking way (uses threading)
+
 mqttclient.loop_start()
 
 time.sleep(5)
+try:
+	rc = 0
+	while rc == 0:
+    		wunderground_get_weather()
+    		wunderground_get_suncalc()
+    		time.sleep(config['updaterate'])
+  		pass
 
-rc = 0
-while rc == 0:
-    wunderground_get_weather()
-    wunderground_get_suncalc()
-    time.sleep(config['updaterate'])
-    pass
+except KeyboardInterrupt:
+	print "\n[*] User Requested Shutdown"
+	sys.exit(1)

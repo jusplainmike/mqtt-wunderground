@@ -1,7 +1,6 @@
 # MQTT-Wunderground
 
 Original script https://github.com/simonvanderveldt/mqtt-wunderground
-Discord Web Hook test
 
 Simple MQTT publisher of weather data using the WeatherUnderground API.
 Publishes the current temperature, relative humidity, precipitation, pressure, windspeed, winddirection as well as sunrise and sunset times from a location.
